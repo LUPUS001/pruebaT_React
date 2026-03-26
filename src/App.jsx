@@ -43,17 +43,17 @@ function App() {
 
   return (
     <div className="App">
-      <header style={{ padding: "20px", backgroundColor: "#f0f0f0", borderRadius: "8px", marginBottom: "20px", display: "flex", gap: "20px" }}>
+      <header className="app-header">
         {selectedBook.isbn ? (
           <>
-            <div style={{ flex: "1", textAlign: "center" }}>
+            <div className="selected-book-image-container">
               {selectedBook.images && selectedBook.images.length > 0 ? (
-                <img src={selectedBook.images[0].ruta} alt={selectedBook.title} style={{ width: "150px", borderRadius: "4px" }} />
+                <img src={selectedBook.images[0].ruta} alt={selectedBook.title} className="selected-book-image" />
               ) : (
-                <div style={{ width: "150px", height: "180px", backgroundColor: "#ccc", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center" }}>Sin imagen</div>
+                <div className="no-image-placeholder">Sin imagen</div>
               )}
             </div>
-            <div style={{ flex: "2" }}>
+            <div className="selected-book-info">
               <h2>{selectedBook.title}</h2>
               <p><strong>Autor:</strong> {selectedBook.author}</p>
               <p><strong>ISBN:</strong> {selectedBook.isbn}</p>
@@ -66,11 +66,11 @@ function App() {
         )}
       </header>
 
-      <section style={{ marginBottom: "20px" }}>
-        <h4 style={{ margin: "0 0 10px 0" }}>Filtrar Catálogo:</h4>
-        <button onClick={fetchAllBooks} style={{ marginRight: "10px" }}>Todos</button>
-        <button onClick={fetchBooksBefore2013} style={{ marginRight: "10px" }}>Antes de 2013</button>
-        <button onClick={fetchDramaBooks}>Libros de Drama</button>
+      <section className="filter-section">
+        <h4 className="filter-title">Filtrar Catálogo:</h4>
+        <button onClick={fetchAllBooks} className="filter-button">Todos</button>
+        <button onClick={fetchBooksBefore2013} className="filter-button">Antes de 2013</button>
+        <button onClick={fetchDramaBooks} className="filter-button">Libros de Drama</button>
       </section>
 
       <BookAdd setBooks={setBooks} />
