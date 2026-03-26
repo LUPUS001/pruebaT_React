@@ -1,62 +1,67 @@
 /* IMPORTACIÓN Y PROPS */
 import React, { useState } from "react";
-// useState: Lo necesitamos para que React "recuerde" lo que el usuario va escribiendo en el formulario.
+// Importamos useState que es la "memoria a corto plazo" de este formulario
 
 function BookAdd(props) {
   const { setBooks } = props;
-  // setBooks: Es la función que viene desde App.jsx. Gracias a ella, el usuario ve el nuevo libro en la lista
-  // sin tener que esperar a que fetchAllBooks vuelva a consultar la base de datos de Symfony.
+  // setBooks: Es la función que nos "presta" App.jsx para que podamos añadir el libro a la lista global cuando terminemos.
 
-  /* EL ESTADO DEL FORMULARIO  */
+  /* LOS "CAJONES" DE MEMORIA (Estados Locales)  */
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [isbn, setIsbn] = useState("");
   const [genre, setGenre] = useState("");
   const [pages, setPages] = useState("");
   /* 
-    Has creado un estado para cada campo del formulario. Esto es lo que se llama "Single Source of Truth" 
-    (Fuente única de verdad): el valor del input no vive en el navegador, vive en el estado de React.
-    Es por eso que podremos editar constantemente este valor de forma asíncrona sin que el usuario tenga que recargar la página
+    Creamos un estado para cada dato que le pedimos al usuario. Empiezan vacios ("")
+    y se irán llenando a medida que el usuario teclee.
   */
 
   /* EL ENVÍO (handleSubmit) */
   const handleSubmit = async (e) => {
-    // Esta función se dispara cuando el usuario hace clic en el botón "Agregar Libro".
+    // La función es async porque tiene que esperar a el servidor de Symfony haga su magia
 
     e.preventDefault();
-    // Evita que la página se recargue (comportamiento por defecto de los formularios HTML). Queremos que sea una SPA (Single Page Application).
+    // Evita que la página se refresque. Sin esto perderíamos el estado de React y ya no tendríamos una Single Page Application
 
     const newBook = {
       title,
       author,
       isbn,
-      category: genre,
-      pages: parseInt(pages) || 0, // convertimos pages a número (parseInt) porque Symfony lo espera como un entero, evita enviarlo al backend si el usuario deja el campo de páginas vacío.
+      category: genre, // le asignamos a la propiedad de Symfony categoría la propiedad que hemos hecho en React 'genre' (dejamos este nombre para que sea más intuitiva para el usuario)
+      pages: parseInt(pages) || 0, // convertimos pages a número entero (parseInt) ya que sino React guardaría el número como "200" y no 200
     };
-    // Creación del objeto: Creamos newBook con los valores de los estados locales.
+    // Fabricamos el objeto que vamos a mandar al backend.
 
     try {
       /* PETICIÓN AL SERVIDOR (Fetch POST) */
       const response = await fetch("/book/anadir", {
-        method: "POST", // Indicamos que vamos a enviar nuevos datos al servidor
+        // usamos el endpoint /book/anadir que configuramos en Symfony
+
+        method: "POST", // El método es POST porque estamos creando algo nuevo
         headers: {
           "Content-Type": "application/json", // le avisamos a Symfony que vamos a enviar un objeto JSON
         },
-        body: JSON.stringify(newBook), // Convertimos nuestro objeto JavaScript a una cadena de texto JSON para que viaje por la red
+        body: JSON.stringify(
+          newBook,
+        ) /* Convertimos el objeto newBook a una cadena de texto plana porque el protocolo HTTP
+             no entiende de objetos de JavaScript, solo de texto */,
       });
 
-      /* ACTUALIZACIÓN DE LA INTERFAZ */
+      /* ACTUALIZACIÓN Y LIMPIEZA DE LA INTERFAZ */
       if (response.ok) {
         setBooks((prevBooks) => [...prevBooks, newBook]);
+        /* Si Symfony nos dice que lo ha recibido y guardado "ok", actualizamos la parrila de libros usando
+           el operador spread (..prevBooks). Con esto decimos que coja todo lo que había y pegue lo nuevo al final */
+
         setTitle("");
         setAuthor("");
         setIsbn("");
         setGenre("");
         setPages("");
+        // Vaciamos los campos del formulario apra que el usuario pueda meter otro libro sin tener que borrar a mano
         console.log("Libro añadido con éxito");
       }
-      // Si el servidor responde con éxito, usas 'setBooks'. Al usar el operador spread (...prevBooks), le dices a React:
-      // "Coge todos los libros que ya tenías y pon este nuevo al final". Luego, limpias todos los campos del formulario para que el usuario pueda escribir otro.
     } catch (error) {
       console.error("Error al añadir el libro:", error);
     }
@@ -66,15 +71,17 @@ function BookAdd(props) {
     <div className="book-add-container">
       <h3>Agregar Nuevo Libro</h3>
       <form onSubmit={handleSubmit} className="book-add-form">
-        {/* EL "DIBUJO" (JSX) */}
+        {/* EL DIBUJO VISUAL (Inputs Controlados) */}
         <input
-          name="title" // Vincula el valor del cuadro de texto con el estado de React
+          name="title"
           type="text"
           placeholder="Título"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)} // Cada vez que el usuario pulsa una tecla, 'e.target.value' captura esa letra y actualiza el estado mediante 'setTitle'
-          required // Validación básica de HTML5 para asegurar que no se envién libros sin título o autor.
+          value={title} // El input muestra lo qe diga el estado.
+          onChange={(e) => setTitle(e.target.value)} // Cada vez que pulsas una tecla, 'e.target.value' ejecutas 'setTitle' y actualizas el estado esa letra y actualiza el estado.
+          required
+          // Con esto el input y el estado siempre están sincronizados
         />
+
         <input
           name="author"
           type="text"

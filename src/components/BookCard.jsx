@@ -1,26 +1,30 @@
 /* HERRAMIENTAS (PROPS) */
 function BookCard(props) {
+  // Defines la función del componente. Recibe el objeto props, que es el "paquete" de datos que le envía su padre (BookList).
+
   const { book, setSelectedBook, setBooks } = props;
-  /* 
-    - book: Es el objeto con toda la información de un libro específico (título, autor...) que le paso su padre 'BookList.jsx'
-    - setSelectedBook: Esta función avisa a App.jsx sobre que libro ha sido clicado.
-    - setBooks: Esta función actualiza la lista global (el total de libros del api rest /books) tras un borrado
-*/
+  // Sacas del paquete tres cosas: el objeto book (los datos del libro actual), la función setSelectedBook
+  // (para marcar cuál estamos viendo) y setBooks (para actualizar la lista si borramos).
 
   /* LÓGICA DE BORRADO (handleDelete) */
   const handleDelete = async (e) => {
-    e.stopPropagation(); // Evita que se seleccione el libro al borrarlo
+    // Es una función async porque tiene que esperar a que el servidor responda.
+
+    e.stopPropagation();
+    // Crucial. Detiene el evento de clic para que no "suba" al li. Sin esto, al borrar un libro,
+    // la aplicación creería que también quieres seleccionarlo para verlo en el detalle.
 
     try {
-      // Petición DELETE --> Llama al endpoint de Symfony usando el ISBN como id único en la URL
       const response = await fetch(`/book/delete/${book.isbn}`, {
         method: "DELETE",
       });
+      // Haces la llamada a Symfony. Usas el método DELETE y le pasas el ISBN dinámicamente en la URL
+      // para que el backend sepa exactamente qué libro eliminar de la base de datos.
 
-      // Actualización transparente --> si Symfony responde con un ok...
       if (response.ok) {
         setBooks((prevBooks) => prevBooks.filter((b) => b.isbn !== book.isbn));
-        // usamos .filter() para crear un nuevo array que contenga todos los libros excepto el que acabas de borrar.
+        // Si Symfony dice que todo ha ido bien (ok), actualizas la pantalla de forma "transparente".
+        // Usas .filter() para crear una lista nueva donde estén todos los libros menos el que tiene el ISBN que acabas de borrar.
 
         console.log("Libro eliminado con éxito");
       }
@@ -29,40 +33,46 @@ function BookCard(props) {
     }
   };
 
-  /* ESTRUCTURA VISUAL (JSX) */
+  /* DISEÑO (JSX y Renderizado) */
   return (
-    //El componente BookCard devuelve un 'li' que tiene 2 grandes bloques:
+    // Aquí es donde renderizamos la tarjeta
 
     <li onClick={() => setSelectedBook(book)} className="book-card-item">
-      {/* 1. El contenedor de imagen */}
+      {/* 
+        El contenedor principal es un li. Al hacer clic en cualquier parte de la tarjeta, 
+        ejecutas setSelectedBook(book), lo que hace que este libro aparezca en el header de App.jsx. 
+      */}
+
       <div className="book-card-image-container">
-        {/* Renderizado seguro: Antes de pintar la imagen, comprobamos que existe */}
         {book.images && book.images.length > 0 ? (
           <img
-            /* Ruta dinámica: Accedes a la primera imagen del array (book.images[0].ruta) para mostrar la portada. */
             src={book.images[0].ruta}
             alt={book.title}
             className="book-card-image"
           />
         ) : (
-          // Si no hay fotos mostramos un cuadro gris que ponga 'Sin imagen' para no romper el diseño y que quede más profesional
           <span className="book-card-placeholder-text">Sin imagen</span>
         )}
       </div>
+      {/* 
+        Renderizado condicional. Miras si el libro tiene imágenes. Si tiene, pintas la primera (images[0]). 
+        Si no tiene, pintas un texto de "Sin imagen" para que la tarjeta no quede vacía.
+      */}
 
-      {/* 2. El bloque de información y acciones */}
       <div className="book-card-info">
         <h3 className="book-card-title">{book.title}</h3>
         <h5 className="book-card-subtitle">{book.subtitle}</h5>
         <p className="book-card-author">
           <strong>Autor:</strong> {book.author}
         </p>
-        {/* Mostramos el título, subtítulo y el autor del libro */}
+        {/* 
+          Pintas los textos básicos. Usas llaves {} para que React sepa que debe poner el valor de la variable.
+        */}
 
         <button onClick={handleDelete} className="book-card-delete-button">
           Eliminar
         </button>
-        {/* Al hacer clic sobre el 'li' ejecuta 'setSelectedBook(book)' subiendo el objeto al componente App.jsx, que es quien pintará estos cambios */}
+        {/* El botón de eliminar llama a la función handleDelete que explicamos antes. */}
       </div>
     </li>
   );
@@ -70,7 +80,7 @@ function BookCard(props) {
 
 export default BookCard;
 
-/* ESTILOS Y UX 
-- Si nos vamos al CSS para ver las clases que estamos utilizando veremos que el cursor: "pointer" y la sombra (boxShadow) indican al usuario que la tarjeta es clicable.
-- Usamos un diseño de tipo "Media Object" (imagen a la izquierda, texto a la derecha) que es el estándar para listados de este tipo.
+/* RESUMEN
+  Usamos la función setBooks que recibimos por props. Al ejecutar un .filter() sobre el estado anterior, 
+  React detecta que el array es nuevo y elimina el componente del DOM de forma eficiente
 */
